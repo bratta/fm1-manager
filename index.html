@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FM-1 Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+            <g fill="none" stroke="currentColor" stroke-width="1.6">
+              <circle cx="7" cy="7" r="3.2" /><circle cx="21" cy="7" r="3.2" /><circle cx="7" cy="21" r="3.2" /><circle cx="21" cy="21" r="3.2" />
+              <path d="M10.2 7h7.6M7 10.2v7.6M21 10.2v7.6" />
+            </g>
+          </svg>
+          <span>FM-1 Manager</span>
+        </div>
+        <nav class="tabs" aria-label="Sections">
+          <a href="#presets" data-view="presets">Presets</a>
+          <a href="#editor" data-view="editor">Editor</a>
+          <a href="#firmware" data-view="firmware">Firmware</a>
+        </nav>
+        <div class="device">
+          <div class="chip" id="device-chip" data-state="off">
+            <span class="dot" aria-hidden="true"></span>
+            <span id="device-model">Not connected</span>
+            <span id="device-detail" class="muted"></span>
+          </div>
+          <button id="connect" class="btn">Connect</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ------------------------------------------------------------ presets -->
+    <main id="view-presets" class="page">
+      <div class="page-head">
+        <h1>Presets</h1>
+        <p class="muted">
+          Your library of the synth's 128 sounds, in four banks of 32. The synth can't list its presets, so this is what you
+          last backed up or sent.
+        </p>
+      </div>
+      <p id="notice" class="notice" role="status" hidden></p>
+
+      <div class="cards-2">
+        <section class="card" aria-labelledby="current-h">
+          <div class="card-head">
+            <h2 id="current-h" class="eyebrow">Current sound</h2>
+            <span id="current-hint" class="mono muted">Not read yet</span>
+          </div>
+          <div class="lcd">
+            <span id="current-name" class="lcd-big">— — —</span>
+            <span id="current-detail" class="lcd-small">Select a preset on the synth, then read it</span>
+          </div>
+          <div class="row">
+            <button id="read-voice" class="btn btn-raised" disabled>Read from synth</button>
+            <button id="save-toggle" class="btn" disabled aria-expanded="false" aria-controls="save-form">Save to library…</button>
+            <button id="current-edit" class="btn" disabled>Open in editor</button>
+          </div>
+          <form id="save-form" class="row" hidden>
+            <label>Bank <select id="save-bank" class="input"></select></label>
+            <label>Slot <input id="save-slot" class="input" type="number" min="1" max="32" value="1" /></label>
+            <button class="btn btn-primary" type="submit">Save</button>
+          </form>
+        </section>
+
+        <section class="card" aria-labelledby="backup-h">
+          <div class="card-head">
+            <h2 id="backup-h" class="eyebrow">Backup</h2>
+            <span id="backup-badge" class="ok-badge" hidden>
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              All 128 backed up
+            </span>
+          </div>
+          <div class="stack">
+            <div class="kv"><span class="muted">Last backup</span><span id="backup-when">Never</span></div>
+            <div class="bar" role="progressbar" aria-label="Backup progress" aria-valuemin="0" aria-valuemax="128" id="backup-bar">
+              <div id="backup-fill"></div>
+            </div>
+            <p id="backup-status" class="small muted">
+              Steps through every preset and reads it back. Takes about a minute and needs firmware V14 or later.
+            </p>
+          </div>
+          <div class="row">
+            <button id="backup-all" class="btn btn-primary" disabled>Back up all 128</button>
+            <button id="backup-cancel" class="btn" hidden>Cancel</button>
+            <button id="backup-download" class="btn">Download .syx</button>
+            <label class="push small muted"
+              >MIDI channel
+              <select id="backup-channel" class="input"></select>
+            </label>
+          </div>
+        </section>
+      </div>
+
+      <section aria-labelledby="banks-h" class="stack">
+        <div class="section-head">
+          <h2 id="banks-h">Banks</h2>
+          <label class="btn" for="import-all">Import backup…</label>
+          <input id="import-all" type="file" accept=".syx" class="visually-hidden" />
+        </div>
+        <div id="banks" class="banks"></div>
+      </section>
+    </main>
+
+    <!-- ----------------------------------------------------------- firmware -->
+    <main id="view-firmware" class="page" hidden>
+      <div class="page-head">
+        <h1>Firmware</h1>
+        <p class="muted">
+          Go back to M-VAVE's stock firmware before switching to a different third-party firmware. It's the safest starting
+          point.
+        </p>
+      </div>
+
+      <div id="fw-warning" class="warning" role="alert" hidden>
+        <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M11 3l9 16H2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /><path d="M11 9v4.5M11 16.3v.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
+        <span><strong>Keep the synth plugged in and this tab open.</strong> Interrupting the write can leave the synth unusable.</span>
+      </div>
+
+      <div class="split">
+        <section class="card card-lg main-col" aria-labelledby="restore-h">
+          <div class="card-head">
+            <h2 id="restore-h" class="title">Restore stock firmware</h2>
+            <span id="fw-percent" class="percent" hidden>0%</span>
+          </div>
+
+          <ol class="steps" id="fw-steps">
+            <li data-step="1"><span class="num">1</span><span><strong>Check package</strong><span class="small muted">The synth reads and verifies the file</span></span></li>
+            <li data-step="2"><span class="num">2</span><span><strong>Restart</strong><span class="small muted">It reboots into update mode</span></span></li>
+            <li data-step="3"><span class="num">3</span><span><strong>Write &amp; confirm</strong><span class="small muted">Flash is written, version checked</span></span></li>
+          </ol>
+
+          <div class="bar bar-lg" id="fw-bar" role="progressbar" aria-label="Firmware write progress" aria-valuemin="0" aria-valuemax="100" hidden>
+            <div id="fw-fill"></div>
+          </div>
+          <p id="fw-stage" class="stage" role="status"></p>
+
+          <div class="file-box" id="fw-box">
+            <div class="file-row">
+              <svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true"><rect x="7" y="4" width="22" height="28" rx="3" fill="none" stroke="currentColor" stroke-width="1.6" /><path d="M12 12h12M12 17h12M12 22h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
+              <div class="file-name">
+                <strong id="fw-name">No file chosen</strong>
+                <span id="fw-size" class="small muted">Choose the .fwsc file from M-VAVE's website</span>
+              </div>
+              <span id="fw-verdict" hidden></span>
+              <label class="btn" for="fw-file" id="fw-choose">Choose file</label>
+              <input id="fw-file" type="file" accept=".fwsc" class="visually-hidden" />
+            </div>
+            <dl id="fw-details" hidden>
+              <dt>Package</dt><dd id="fw-package" class="mono"></dd>
+              <dt>SHA-256</dt><dd id="fw-sha" class="mono wrap"></dd>
+            </dl>
+          </div>
+
+          <label class="confirm" id="fw-confirm-row">
+            <input id="fw-confirm" type="checkbox" />
+            <span>I understand that unplugging the synth or closing this tab while it's writing can leave it unusable.</span>
+          </label>
+
+          <div class="row">
+            <button id="fw-start" class="btn btn-danger" disabled>Restore stock firmware</button>
+            <span class="small muted">Takes a few minutes. Back up your presets first.</span>
+          </div>
+
+          <details class="log">
+            <summary>Technical log</summary>
+            <pre id="log"></pre>
+          </details>
+        </section>
+
+        <aside class="side-col">
+          <section class="card" aria-labelledby="installed-h">
+            <h2 id="installed-h" class="eyebrow">On the synth</h2>
+            <div class="lcd lcd-sm"><span id="installed" class="lcd-mid">— — —</span></div>
+            <p id="installed-note" class="small muted">Connect to see the installed firmware.</p>
+          </section>
+          <section class="card" aria-labelledby="safety-h">
+            <h2 id="safety-h" class="eyebrow">Before you start</h2>
+            <ul class="small tips">
+              <li>Use a direct USB cable, not a hub.</li>
+              <li>Close other apps that use MIDI.</li>
+              <li>If it's interrupted, keep the synth plugged in and run the restore again. It picks up from update mode.</li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <!-- ------------------------------------------------------------- editor -->
+    <main id="view-editor" class="page editor" hidden>
+      <div class="page-head">
+        <h1>Editor</h1>
+        <p class="muted">
+          Shape a sound and hear it here as you go. Save it to a bank, then send the bank to the synth or back it up from
+          the Presets tab.
+        </p>
+      </div>
+      <p id="ed-notice" class="notice" role="status" hidden></p>
+
+      <section class="card ed-patch" aria-label="Patch">
+        <div class="lcd ed-lcd">
+          <label class="visually-hidden" for="ed-name">Sound name</label>
+          <input id="ed-name" class="lcd-big lcd-input" maxlength="10" spellcheck="false" autocomplete="off" />
+          <span id="ed-summary" class="lcd-small"></span>
+        </div>
+        <div class="ed-actions">
+          <div class="row">
+            <button id="ed-new" class="btn" title="Start from the DX7 init voice: one plain sine wave">New</button>
+            <button id="ed-load" class="btn">Open…</button>
+            <button id="ed-export" class="btn" title="Download this sound as a single-voice .syx file">Export</button>
+            <span class="ed-sep" aria-hidden="true"></span>
+            <button id="ed-undo" class="btn btn-icon" aria-label="Undo" title="Undo (⌘Z)">
+              <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M6 4L2.5 7.5 6 11M3 7.5h7.5a4.5 4.5 0 010 9H8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button id="ed-redo" class="btn btn-icon" aria-label="Redo" title="Redo (⇧⌘Z)">
+              <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M12 4l3.5 3.5L12 11M15 7.5H7.5a4.5 4.5 0 000 9H10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div class="row">
+            <button id="ed-putback" class="btn" hidden></button>
+            <button id="ed-try" class="btn btn-outline" disabled title="Play this sound on the synth without storing it. Selecting a preset on the synth brings that preset back.">Try on synth</button>
+            <button id="ed-save" class="btn btn-primary">Save to bank…</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="ed-main">
+        <section class="card ed-alg" aria-labelledby="ed-alg-h">
+          <div class="card-head">
+            <h2 id="ed-alg-h" class="eyebrow">Algorithm</h2>
+            <div class="alg-step">
+              <button id="ed-alg-prev" class="btn btn-icon" aria-label="Previous algorithm">
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <span id="ed-alg-num" class="alg-num-lcd" aria-live="polite"></span>
+              <button id="ed-alg-next" class="btn btn-icon" aria-label="Next algorithm">
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          </div>
+          <div id="ed-alg-diagram" class="alg-diagram"></div>
+          <p class="small muted alg-legend">
+            <span><span class="swatch carrier"></span> Carriers are what you hear.</span>
+            <span><span class="swatch modulator"></span> Modulators shape their tone.</span>
+            <span>Click an operator to edit it.</span>
+          </p>
+          <button id="ed-alg-all" class="btn" aria-expanded="false" aria-controls="ed-alg-grid">Show all 32</button>
+          <div id="ed-alg-grid" class="alg-grid" hidden></div>
+          <div id="ed-alg-controls" class="stack"></div>
+        </section>
+
+        <div class="ed-ops-col">
+          <div id="ed-ops" class="op-tiles" role="tablist" aria-label="Operators"></div>
+          <section id="ed-op" class="card ed-op" role="tabpanel" aria-labelledby="ed-op-title">
+            <div class="card-head ed-op-head">
+              <div>
+                <h2 id="ed-op-title" class="title"></h2>
+                <span id="ed-op-role" class="small muted"></span>
+              </div>
+              <div class="row">
+                <button id="ed-op-mute" class="btn btn-sm" aria-pressed="false" title="Silence this operator in the preview only">Mute</button>
+                <button id="ed-op-solo" class="btn btn-sm" aria-pressed="false" title="Hear only this operator in the preview">Solo</button>
+                <button id="ed-op-copy" class="btn btn-sm">Copy</button>
+                <button id="ed-op-paste" class="btn btn-sm" disabled>Paste</button>
+                <button id="ed-op-reset" class="btn btn-sm" title="Reset this operator to the init voice's settings">Reset</button>
+              </div>
+            </div>
+            <div class="env-wrap">
+              <h3 class="ed-group-title">Envelope</h3>
+              <div id="ed-env"></div>
+              <div id="ed-env-sliders" class="env-sliders"></div>
+            </div>
+            <div id="ed-op-groups" class="ed-groups"></div>
+          </section>
+        </div>
+      </div>
+
+      <div class="cards-2">
+        <section class="card" aria-labelledby="ed-pitch-h">
+          <h2 id="ed-pitch-h" class="eyebrow">Pitch</h2>
+          <div id="ed-penv"></div>
+          <div id="ed-pitch" class="env-sliders"></div>
+        </section>
+        <section class="card" aria-labelledby="ed-lfo-h">
+          <h2 id="ed-lfo-h" class="eyebrow">LFO</h2>
+          <div id="ed-lfo" class="lfo-grid"></div>
+        </section>
+      </div>
+
+      <section class="kbd-dock" aria-label="Preview keyboard">
+        <div class="kbd-bar">
+          <div class="row">
+            <button id="kbd-down" class="btn btn-icon btn-sm" aria-label="Octave down (Z)" title="Octave down (Z)">
+              <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <span id="kbd-range" class="mono small"></span>
+            <button id="kbd-up" class="btn btn-icon btn-sm" aria-label="Octave up (X)" title="Octave up (X)">
+              <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div id="kbd-controls" class="row kbd-controls"></div>
+          <span class="small muted kbd-tip">Play with your mouse or the A–L keys. Preview is approximate; the synth itself may sound a little different.</span>
+        </div>
+        <div id="kbd"></div>
+      </section>
+    </main>
+
+    <dialog id="ed-dialog" class="dialog" aria-labelledby="ed-dialog-h">
+      <form method="dialog" class="dialog-inner">
+        <div class="card-head">
+          <h2 id="ed-dialog-h" class="title"></h2>
+          <button class="btn btn-icon" value="cancel" aria-label="Close">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div class="row">
+          <div id="ed-dialog-banks" class="seg" role="tablist" aria-label="Bank"></div>
+          <label id="ed-dialog-file" class="btn btn-sm push">Open .syx file… <input type="file" accept=".syx" class="visually-hidden" /></label>
+        </div>
+        <ol id="ed-dialog-slots" class="slots"></ol>
+        <div class="row dialog-foot">
+          <span id="ed-dialog-hint" class="small muted"></span>
+          <button id="ed-dialog-ok" class="btn btn-primary push" value="ok">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <template id="bank-template">
+      <article class="bank">
+        <div class="bank-head">
+          <span class="bank-letter"></span>
+          <div class="bank-title">
+            <h3></h3>
+            <span class="small muted bank-sub"></span>
+          </div>
+          <span class="pill"></span>
+        </div>
+        <ol class="voices"></ol>
+        <div class="bank-actions">
+          <button class="btn btn-outline" data-action="send">Send to synth</button>
+          <label class="btn" data-action="import">Import <input type="file" accept=".syx" class="visually-hidden" /></label>
+          <button class="btn" data-action="export">Export</button>
+        </div>
+      </article>
+    </template>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
