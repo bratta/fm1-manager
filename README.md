@@ -3,7 +3,11 @@
 A browser app for the M-VAVE FM-1: manage the 128 presets and restore the stock
 firmware, over USB using Web MIDI.
 
-<video src=“fm1-manager-promo.mp4” controls=“controls” style=“max-width: 100%”></video>	
+
+
+https://github.com/user-attachments/assets/11d481a2-4ca3-4447-b4cc-c6bacb2fa7e3
+
+
 
 ## Run it
 
